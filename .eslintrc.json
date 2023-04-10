@@ -1,0 +1,40 @@
+{
+  "extends": ["next/core-web-vitals", "prettier"],
+  "plugins": ["simple-import-sort", "unused-imports", "import"],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "no-console": "error",
+    "no-unused-vars": "error",
+    "spaced-comment": "error",
+    "quotes": ["error", "single"],
+    "no-duplicate-imports": "error",
+    "react/prop-types": "off",
+    "react-hooks/exhaustive-deps": "warn",
+    "simple-import-sort/imports": [
+      "error",
+      {
+        "groups": [
+          ["^\\u0000"],
+          ["^react$"],
+          ["^@?\\w"],
+          ["^app(/.*|$)"],
+          ["^\\."]
+        ]
+      }
+    ],
+    "import/newline-after-import": "error",
+    "@typescript-eslint/no-unused-vars": "off",
+    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-vars": [
+      "error",
+      {
+        "vars": "all",
+        "varsIgnorePattern": "^_",
+        "args": "after-used",
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "sort-imports": "off",
+    "import/order": "off"
+  }
+}
