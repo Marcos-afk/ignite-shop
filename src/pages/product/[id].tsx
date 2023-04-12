@@ -4,6 +4,7 @@ import { stripe } from '@lib/stripe';
 import * as S from '@styles/pages/product';
 import axios from 'axios';
 import { GetStaticPaths, GetStaticProps } from 'next';
+import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import Stripe from 'stripe';
@@ -47,28 +48,33 @@ const Product = ({ product }: ProductProps) => {
   };
 
   return (
-    <S.Container>
-      <S.ImageContainer>
-        <Image
-          src={product.imageUrl}
-          alt="Explorer"
-          width={520}
-          height={480}
-          style={{
-            maxWidth: '100%',
-            height: 'auto',
-          }}
-        />
-      </S.ImageContainer>
-      <S.ProductDetails>
-        <h1>{product.name}</h1>
-        <span>{product.price}</span>
-        <p>{product.description}</p>
-        <button disabled={isLoading} type="button" onClick={handleBuyProduct}>
-          Comprar agora
-        </button>
-      </S.ProductDetails>
-    </S.Container>
+    <>
+      <Head>
+        <title>{product.name + '|' + 'Ignite Shop'}</title>
+      </Head>
+      <S.Container>
+        <S.ImageContainer>
+          <Image
+            src={product.imageUrl}
+            alt={product.name}
+            width={520}
+            height={480}
+            style={{
+              maxWidth: '100%',
+              height: 'auto',
+            }}
+          />
+        </S.ImageContainer>
+        <S.ProductDetails>
+          <h1>{product.name}</h1>
+          <span>{product.price}</span>
+          <p>{product.description}</p>
+          <button disabled={isLoading} type="button" onClick={handleBuyProduct}>
+            Comprar agora
+          </button>
+        </S.ProductDetails>
+      </S.Container>
+    </>
   );
 };
 
@@ -90,17 +96,21 @@ export const getStaticPaths: GetStaticPaths = async () => {
 export const getStaticProps: GetStaticProps<any, { id: string }> = async ({
   params,
 }) => {
-  if (!params) {
+  const productId = params?.id as string;
+  let product: Stripe.Product;
+
+  try {
+    product = await stripe.products.retrieve(productId, {
+      expand: ['default_price'],
+    });
+  } catch {
     return {
-      notFound: true,
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
     };
   }
-
-  const productId = params.id;
-
-  const product = await stripe.products.retrieve(productId, {
-    expand: ['default_price'],
-  });
 
   const price = product.default_price as Stripe.Price;
 
