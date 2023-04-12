@@ -1,5 +1,8 @@
+import { useState } from 'react';
+
 import { stripe } from '@lib/stripe';
 import * as S from '@styles/pages/product';
+import axios from 'axios';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -12,15 +15,36 @@ interface ProductProps {
     description: string;
     imageUrl: string;
     price: string;
+    defaultPriceId: string;
   };
 }
 
 const Product = ({ product }: ProductProps) => {
+  const [isLoading, setIsLoading] = useState(false);
   const { isFallback } = useRouter();
 
   if (isFallback) {
     return <p>Carregando...</p>;
   }
+
+  const handleBuyProduct = async () => {
+    try {
+      setIsLoading(true);
+      const { data } = await axios.post('/api/checkout', {
+        priceId: product.defaultPriceId,
+      });
+
+      const { checkoutUrl } = data;
+
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      setIsLoading(false);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Erro ao comprar o produto';
+
+      alert(errorMessage);
+    }
+  };
 
   return (
     <S.Container>
@@ -40,7 +64,9 @@ const Product = ({ product }: ProductProps) => {
         <h1>{product.name}</h1>
         <span>{product.price}</span>
         <p>{product.description}</p>
-        <button>Comprar agora</button>
+        <button disabled={isLoading} type="button" onClick={handleBuyProduct}>
+          Comprar agora
+        </button>
       </S.ProductDetails>
     </S.Container>
   );
@@ -89,6 +115,7 @@ export const getStaticProps: GetStaticProps<any, { id: string }> = async ({
           style: 'currency',
           currency: 'BRL',
         }).format((price.unit_amount as number) / 100),
+        defaultPriceId: price.id,
       },
     },
     revalidate: 60 * 60 * 24,
