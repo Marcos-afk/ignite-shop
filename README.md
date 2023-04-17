@@ -2,7 +2,6 @@
 
 <div align="center">
 	<img src="./src/assets/first-screen.png" width="800"alt="first-screen"/>
-  <img src="./src/assets/second-screen.png" width="800"alt="first-screen"/>
 </div>
 
 ## :dart: Objetivo
