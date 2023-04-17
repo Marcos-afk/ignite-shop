@@ -1,8 +1,10 @@
 import { useState } from 'react';
 
+import { ProductDTO } from '@dtos/product';
+import { useCart } from '@hooks/useCart';
 import { stripe } from '@lib/stripe';
 import * as S from '@styles/pages/product';
-import axios from 'axios';
+import { formatPrice } from '@utils/formatPrice';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
@@ -10,41 +12,22 @@ import { useRouter } from 'next/router';
 import Stripe from 'stripe';
 
 interface ProductProps {
-  product: {
-    id: number;
-    name: string;
-    description: string;
-    imageUrl: string;
-    price: string;
-    defaultPriceId: string;
-  };
+  product: ProductDTO;
 }
 
 const Product = ({ product }: ProductProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { addNewItemToCart } = useCart();
   const { isFallback } = useRouter();
 
   if (isFallback) {
     return <p>Carregando...</p>;
   }
 
-  const handleBuyProduct = async () => {
-    try {
-      setIsLoading(true);
-      const { data } = await axios.post('/api/checkout', {
-        priceId: product.defaultPriceId,
-      });
-
-      const { checkoutUrl } = data;
-
-      window.location.href = checkoutUrl;
-    } catch (error) {
-      setIsLoading(false);
-      const errorMessage =
-        error instanceof Error ? error.message : 'Erro ao comprar o produto';
-
-      alert(errorMessage);
-    }
+  const handleAddProductToCart = () => {
+    setIsLoading(true);
+    addNewItemToCart(product, 1);
+    setIsLoading(false);
   };
 
   return (
@@ -67,10 +50,14 @@ const Product = ({ product }: ProductProps) => {
         </S.ImageContainer>
         <S.ProductDetails>
           <h1>{product.name}</h1>
-          <span>{product.price}</span>
+          <span>{formatPrice(product.price)}</span>
           <p>{product.description}</p>
-          <button disabled={isLoading} type="button" onClick={handleBuyProduct}>
-            Comprar agora
+          <button
+            disabled={isLoading}
+            type="button"
+            onClick={handleAddProductToCart}
+          >
+            Colocar na sacola
           </button>
         </S.ProductDetails>
       </S.Container>
@@ -121,10 +108,7 @@ export const getStaticProps: GetStaticProps<any, { id: string }> = async ({
         name: product.name,
         description: product.description,
         imageUrl: product.images[0],
-        price: new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
-          currency: 'BRL',
-        }).format((price.unit_amount as number) / 100),
+        price: price.unit_amount as number,
         defaultPriceId: price.id,
       },
     },

@@ -8,13 +8,18 @@ import Stripe from 'stripe';
 
 interface SuccessProps {
   costumerName: string;
-  product: {
+  products: {
     name: string;
     imageUrl: string;
-  };
+    quantity: number;
+  }[];
 }
 
 const Success = (props: SuccessProps) => {
+  const totalItems = props.products.reduce((acc, product) => {
+    return acc + product.quantity;
+  }, 0);
+
   return (
     <>
       <Head>
@@ -22,23 +27,27 @@ const Success = (props: SuccessProps) => {
         <meta name="robots" content="noindex" />
       </Head>
       <S.Container>
-        <h1>Compra efetuada</h1>
         <S.ImageContainer>
-          <Image
-            src={props.product.imageUrl}
-            alt={props.product.name}
-            width={520}
-            height={480}
-            style={{
-              maxWidth: '100%',
-              height: 'auto',
-            }}
-          />
+          {props.products.map((product) => (
+            <Image
+              key={product.name}
+              src={product.imageUrl}
+              alt={product.name}
+              width={94}
+              height={94}
+              style={{
+                maxWidth: '100%',
+                height: 'auto',
+              }}
+            />
+          ))}
         </S.ImageContainer>
 
+        <h1>Compra efetuada</h1>
+
         <p>
-          Uhuul <strong>{props.costumerName}</strong>, sua{' '}
-          <strong>{props.product.name}</strong> já está a caminho da sua casa.
+          Uhuul <strong>{props.costumerName}</strong>, sua compra de{' '}
+          <strong>{totalItems} </strong>camisetas já está a caminho da sua casa.
         </p>
 
         <Link href="/">Voltar ao catálogo</Link>
@@ -65,16 +74,23 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     expand: ['line_items', 'line_items.data.price.product'],
   });
 
+  const lineItems = response.line_items?.data as Stripe.LineItem[];
+
   const customerName = response.customer_details?.name;
-  const product = response.line_items?.data[0].price?.product as Stripe.Product;
+
+  const products = lineItems.map((item) => {
+    const product = item.price?.product as Stripe.Product;
+    return {
+      name: product.name,
+      imageUrl: product.images[0],
+      quantity: item.quantity,
+    };
+  });
 
   return {
     props: {
       costumerName: customerName,
-      product: {
-        name: product.name,
-        imageUrl: product.images[0],
-      },
+      products,
     },
   };
 };

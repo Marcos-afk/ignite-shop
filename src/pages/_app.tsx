@@ -1,4 +1,5 @@
 import { Header } from '@components/Header';
+import { CartProvider } from '@contexts/Cart';
 import { globalStyles } from '@styles/global';
 import * as S from '@styles/pages/app';
 import type { AppProps } from 'next/app';
@@ -14,15 +15,17 @@ globalStyles();
 
 const App = ({ Component, pageProps }: AppProps) => {
   return (
-    <S.Container>
-      <style jsx global>{`
+    <CartProvider>
+      <S.Container>
+        <style jsx global>{`
         html {
           font-family: ${roboto.style.fontFamily};
         }
       `}</style>
-      <Header />
-      <Component {...pageProps} />
-    </S.Container>
+        <Header />
+        <Component {...pageProps} />
+      </S.Container>
+    </CartProvider>
   );
 };
 
